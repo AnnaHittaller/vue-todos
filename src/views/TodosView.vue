@@ -1,11 +1,34 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { uid } from "uid"
 import { Icon } from '@iconify/vue';
 import TodoCreator from '../components/TodoCreator.vue';
 import TodoItem from "../components/TodoItem.vue"
 
 const todoList = ref([])
+
+watch(todoList, () => { //like useEffect, first parameter is a reactive element which is watched, the second is a callback function (accepts two params: newValue, oldValue) which runs if there is a change in the reactive element. Useful, so we don't have to add e.g. the setTodoListLocalStorage() to every function which modifies the todos.
+  setTodoListLocalStorage()
+}, { //third param is an object for different options for the watch function
+  deep: true,  //allows us to track changes deep within the todoList array. It is needed, otherwise the function won't detect changes at the properties of the object which is todoList
+})
+
+const todoCompleted = computed(()=> { //takes a getter function and returns a read-only-ref to the value of that getter. Automatically tracks the reactive dependencies.
+ return todoList.value.every(todo => todo.isCompleted)
+})
+
+const fetchTodoList = () => {
+  const savedTodoList = JSON.parse(localStorage.getItem("todoList"))
+  if (savedTodoList) {
+    todoList.value = savedTodoList
+  }
+}
+
+fetchTodoList()
+
+const setTodoListLocalStorage = () => {
+  localStorage.setItem("todoList", JSON.stringify(todoList.value))
+}
 
 const createTodo = (todo) => { //this todo is a parameter for the params array form the emit
   todoList.value.push({  // we need .value because we are using the ref method, and without it we get the whole ref object back
@@ -18,7 +41,7 @@ const createTodo = (todo) => { //this todo is a parameter for the params array f
 }
 
 const toggleTodoComplete = (todoPos) => {
-todoList.value[todoPos].isCompleted = !todoList.value[todoPos].isCompleted
+  todoList.value[todoPos].isCompleted = !todoList.value[todoPos].isCompleted
 }
 
 const toggleEditTodo = (todoPos) => {
@@ -30,7 +53,7 @@ const updateTodo = (todoVal, todoPos) => {
 }
 
 const deleteTodo = (todoId) => {
-todoList.value = todoList.value.filter(todo => todo.id !== todoId)
+  todoList.value = todoList.value.filter(todo => todo.id !== todoId)
 }
 
 </script>
@@ -41,12 +64,16 @@ todoList.value = todoList.value.filter(todo => todo.id !== todoId)
     <TodoCreator @create-todo="createTodo" />
     <!-- listening for the custom emitted event from the TodoCreator component-->
     <ul class="todo-list" v-if="todoList.length > 0">
-      <TodoItem v-for="(todo, index) in todoList" :todo="todo" :index="index" @toggle-complete="toggleTodoComplete" @edit-todo="toggleEditTodo" @update-todo="updateTodo" @delete-todo="deleteTodo"/>
+      <TodoItem v-for="(todo, index) in todoList" :todo="todo" :index="index" @toggle-complete="toggleTodoComplete"
+        @edit-todo="toggleEditTodo" @update-todo="updateTodo" @delete-todo="deleteTodo" />
     </ul>
     <p v-else class="todos-msg">
       <Icon icon="noto-v1:sad-but-relieved-face" width="22" />
       <span>You have no todos to complete - add one!</span>
     </p>
+    <p v-if="todoCompleted && todoList.length > 0" class="todos-msg">
+    <Icon icon="noto-v1:party-popper" width="22" />
+        <span>You have completed all your todos!</span></p>
   </main>
 </template>
 

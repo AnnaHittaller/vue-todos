@@ -7,14 +7,14 @@ const router = createRouter({
 		{
 			path: "/",
 			name: "home",
-			component: TodosView,
+			component: TodosView, //this component is already imported, no need for lazy load because it is the default page
 		},
 		{
 			path: "/about",
 			name: "about",
 			// route level code-splitting
 			// this generates a separate chunk (About.[hash].js) for this route
-			// which is lazy-loaded when the route is visited.
+			// which is lazy-loaded when the route is visited. This is best practice but components can also be imported directly.
 			component: () => import("../views/AboutView.vue"),
 		},
 	],

@@ -12,7 +12,7 @@ const props = defineProps({
     },
     index: {
         type: Number,
-        required: true,
+        required: true, 
     }
 })
 defineEmits(["toggle-complete", "edit-todo", "update-todo", "delete-todo"])
